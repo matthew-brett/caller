@@ -3,28 +3,29 @@
 import os
 from os.path import join as pjoin
 
-import caller
+from caller import Positional, Option, AppWrapper, ParameterDefinitions
 
 import nose
+from nose.tools import assert_raises
 
-script_path = pjoin(os.path.split(__file__)[0], 'scripts')
 
-class App1Wrapper(caller.AppWrapper):
-    cmd = 'python ' + pjoin(script_path, 'app1')
-    positional_defines = (
-        caller.Positional(name='param1'
-                          is_required=True),
-        caller.Positional(name='param2',
-                          is_required=True),
-        )
-    option_defines =  (
-        caller.Option(name='option1',
-                      aliases=['-1'],
-                      checker = str),
-        )
-
+class App1Wrapper(AppWrapper):
+    cmd = pjoin(os.path.split(__file__)[0], 'scripts')
+    parameter_definitions = ParameterDefinitions(
+        positional_defines = (
+            Positional(name='param1',
+                       is_required=True),
+            Positional(name='param2',
+                       is_required=True),
+            ),
+        option_defines = (
+            Option(name='option1',
+                   aliases=['-1'],
+                   checker = str),
+            ))
         
+    
 def test_app1():
-    app1_wrapper = App1Wrapper()
-    res = app1_wrapper.run()
+    appwrapped = App1Wrapper()
+    yield assert_raises, CallerError, app1_wrapper.run
     
