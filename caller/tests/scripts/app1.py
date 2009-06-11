@@ -1,5 +1,5 @@
-#!/bin/env python
-''' Script to print out distances between pairs of words in file '''
+#!/usr/bin/env python
+''' Script with some options and positional parameters '''
 
 from caller import argparse
 
