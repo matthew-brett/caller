@@ -22,7 +22,7 @@ class App1Wrapper(AppWrapper):
             Positional(name='param2',
                        is_required=True),
             ),
-        named_defines = (
+        option_defines = (
             Option(name='option1',
                    aliases=['-1'],
                    checker = str),
@@ -31,6 +31,5 @@ class App1Wrapper(AppWrapper):
 def test_app1():
     app1_wrapped = App1Wrapper()
     yield assert_raises, CallerError, app1_wrapped.run
-    app1_wrapped.set_parameters((1,2))
-    yield assert_true, False
+    app1_wrapped.set_parameters((1,3))
     yield assert_equal, app1_wrapped.positionals, (1,3)

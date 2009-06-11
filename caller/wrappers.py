@@ -5,6 +5,9 @@ class CallerError(RuntimeError):
 class PositionalsContainer(object):
     """ Class to contain positional parameter defines
 
+    The ``ParameterDefinitions`` class uses this class internally to do
+    housekeeping on the collection of positional defines
+
     """
     def __init__(self, positional_defines, globbing=False):
         self._positional_defines = positional_defines
@@ -19,7 +22,7 @@ class PositionalsContainer(object):
         # read only to guarantee names check
         return self._positional_defines
 
-    def defines_generator(self):
+    def gen_defines(self):
         ''' generate all positional defines
         '''
         for pdef in self._positional_defines:
@@ -36,23 +39,11 @@ class PositionalsContainer(object):
             keys += pdef.keys()
         return keys
 
-    def matching_index(self, key):
+    def index(self, key):
         for i, pdef in enumerate(self._positional_defines):
             if key in pdef.keys():
                 return i
     
-    def check_argno(self, argno):
-        ''' Raise error unless valid number of positional arguments passed
-        '''
-        pdefs = self._positional_defines
-        if not self.globbing:
-            if argno > len(pdefs):
-                raise CallerError('Too many positional arguments')
-        min_positionals = sum([pdef.is_required for pdef in pdefs])
-        if argno < min_positionals:
-            raise CallerError('Need at least %d positional arguments'
-                              % min_positionals)
-        
 
 class ParameterDefinitions(object):
     """ Class encapsulating parameter definitions
@@ -71,21 +62,44 @@ class ParameterDefinitions(object):
     * a, b = obj.checked_values(positionals, named)
     * cmd_str = obj.make_command(cmd, positionals, named)
 
-    
     """
     options_first = True
+    
     def __init__(self,
-                 positional_defines=(),
-                 named_defines = None):
+                 positional_defines,
+                 option_defines = (),
+                 positional_globbing=False):
+        """ Initialize definitions
+
+        Parameters
+        ----------
+        positional_defines : sequence
+           sequence of objects matching Positional API, and defining
+           positional parameters
+        option_defines : sequence
+           sequence of objects matching Option API, defining option
+           parameters.
+        positional_globbing : bool
+           If True, positional arguments can extend to infinite number
+           
+        Examples
+        --------
+        >>> from caller import Positional, Option
+        >>> poses = (Positional('param1'), Positional('param2'))
+        >>> opts = (Option('option1'), Option('option2'))
+        >>> pd = ParameterDefinitions(poses, opts)
+        """
         self._positional_defines = positional_defines
-        self._pos_container = PositionalsContainer(positional_defines)
-        self._named_defines = named_defines
+        self._pos_container = PositionalsContainer(positional_defines,
+                                                   positional_globbing)
+        self._option_defines = option_defines
+        self._positional_globbing = positional_globbing
         # check for duplicate names in named defines
         named_dict = {}
         for pdef in self._positional_defines:
             for key in pdef.keys():
                 named_dict[key] = pdef
-        for odef in self.named_defines:
+        for odef in self.option_defines:
             for key in odef.keys():
                 if key in named_dict:
                     raise ValueError('Duplicate name "%s" for parameter %s'
@@ -98,10 +112,10 @@ class ParameterDefinitions(object):
         return self._positional_defines
 
     @property
-    def named_defines(self):
-        return self._named_defines
+    def option_defines(self):
+        return self._option_defines
         
-    def checked_values(self, positionals, named):
+    def checked_values(self, positionals=(), named=None):
         ''' Check each value using checkers
 
         Note that the named argumets can also be positional.  They will
@@ -111,9 +125,10 @@ class ParameterDefinitions(object):
         ----------
         positionals : sequence
            values for positional parameters
-        named : mapping
+        named : mapping or None
            keys, values for options (which must be named) and of any
-           named positional parameters
+           named positional parameters. If None (the default) then
+           assume empty mapping
 
         Returns
         -------
@@ -126,45 +141,92 @@ class ParameterDefinitions(object):
 
         Examples
         --------
-        
-           
+        >>> from caller import Positional, Option
+        >>> poses = (Positional('param1'), Positional('param2'))
+        >>> opts = (Option('option1'), Option('option2'))
+        >>> pd = ParameterDefinitions(poses, opts)
+        >>> pvals, ovals = pd.checked_values(('1','2'),{'option1':'Yo'})
+        >>> pvals
+        ('1', '2')
+        >>> ovals
+        {'option1': 'Yo'}
         '''
+        if named is None:
+            named = {}
         # first process named, pulling out any positional
         posdefs = self._pos_container
         pkeys = posdefs.keys()
         options = {}
         named_poses = []
+        # check named, and remove positionals
         for key, value in named.items():
-            pos_ind = posdefs.matching_index(key)
-            if pos_ind:
+            pos_ind = posdefs.index(key)
+            if not pos_ind is None:
                 named_poses.append((pos_ind, value))
+                continue
             if not key in self._named_dict:
                 raise CallerError('Strange key "%s" in named parameters'
                                  % key)
-            options = self._named_dict[key].checker(value)
+            ndef = self._named_dict[key]
+            # make name canonical for option
+            options[ndef.name] = ndef.checker(value)
+        # put any named positionals into positionals list
         named_poses.sort(lambda x,y: cmp(x[0],y[0]))
-        poses = list(positionals)
+        positionals = list(positionals)
         for i, val in named_poses:
-            if i < len(poses):
-                poses[i] = val
+            if i < len(positionals):
+                positionals[i] = val
                 continue
-            if i == len(poses):
-                poses.append(val)
+            if i == len(positionals):
+                positionals.append(val)
             else:
                 raise CallerError('Named positional too far from end '
-                                  ' of positional list')
-        pdef_iter = posdefs.defines_generator()
-        for value in poses:
-            pdef = pdef_iter.next()
+                                  'of positional list')
+        # check positionals
+        pdef_iter = posdefs.gen_defines()
+        poses = []
+        for value in positionals:
+            try:
+                pdef = pdef_iter.next()
+            except StopIteration:
+                raise CallerError('Too many positional parameters')
             poses.append(pdef.checker(value))
         return tuple(poses), options
 
-    def make_cmdline(self, cmd, positionals, named, checked=False):
+    def make_cmdline(self, cmd, positionals=(), named=None, checked=False):
+        ''' Make command line string from input `cmd` and parameters
+
+        Parameters
+        ----------
+        cmd : string
+           command
+        positionals : sequence
+           sequence of positional argument values
+        named : mapping
+           key, value pairs of named arguememts, either options, or
+           named positional
+        checked: bool
+           True if `positionals` and `named` have already been checked
+           and sorted into positional and option args.
+
+        Returns
+        -------
+        cmdline : string
+           command line string
+        '''
+        if named is None:
+            named = {}
         if not checked:
             positionals, named = self.checked_values(positionals, named)
-        posdefs = self._pos_container
-        posdefs.check_argno(len(positionals))
-        pdef_iter = iter(posdefs)
+        # check that required arguments are present
+        for i, pdef in enumerate(self._positional_defines):
+            if pdef.is_required and i >= len(positionals):
+                raise CallerError('Not enough positional arguments')
+        for odef in self._option_defines:
+            if odef.is_required and odef.name not in named:
+                raise CallerError('Expecting required option "%s"'
+                                  % odef.name)
+        pdef_iter = self._pos_container.gen_defines()
         pos_strs = []
         for value in positionals:
             pdef = pdef_iter.next()

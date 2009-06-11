@@ -60,46 +60,41 @@ class Option(Parameter):
     """ Class to instantiate options
 
     Options differ from parameters in that they have a different default
-    formatter, and they can be 'flags'.  Flags are Options with
-    attribute is_flag set to True.  These return the empty string from
-    ``to_string(value)`` when ``not value`` is True.
+    formatter
     
     >>> opt = Option('o',['opt'],float,True)
     >>> opt.to_string(1)
     '--o=1.0'
-    >>> opt.default_formatter='--opt %(value)s'
-    >>> opt.to_string(1)
-    '--opt 1.0'
     >>> opt = Option('p',['opt'],float,True,stringer='--opt %s')
     >>> opt.to_string(1)
     '--opt 1.0'
-    >>> opt = Option('opt', is_flag=False) # the default
+    >>> opt = Option('opt')
     >>> opt.to_string(1)
     '--opt=1'
     >>> opt.to_string(0)
     '--opt=0'
-    >>> opt = Option('opt', is_flag=True)
-    >>> opt.to_string(1)
-    '--opt=1'
-    >>> opt.to_string(0)
-    ''
     """
     default_formatter = '--%(name)s=%(value)s'
 
-    def __init__(self,
-                 name,
-                 aliases=None,
-                 checker=None,
-                 is_required=False,
-                 stringer=None,
-                 is_flag=False):
-        super(Option, self).__init__(name, aliases,checker,is_required,stringer)
-        self.is_flag = is_flag
-    
+
+class Flag(Option):
+    ''' Class for flag option
+
+    Flags are Options that return the empty string from
+    ``to_string(value)`` when ``not value`` is True.
+
+    >>> opt = Flag('opt')
+    >>> opt.to_string(1)
+    '--opt'
+    >>> opt.to_string(0)
+    ''
+    '''
+    default_formatter = '--%(name)s'
+
     def to_string(self, value):
-        if value or not self.is_flag:
-            return super(Option, self).to_string(value)
-        return ''
+        if not value:
+            return ''
+        return super(Flag, self).to_string(value)
 
     
     
