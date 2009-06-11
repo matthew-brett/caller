@@ -69,7 +69,7 @@ class ParameterDefinitions(object):
     The API consists of:
 
     * a, b = obj.checked_values(positionals, named)
-    * cmd_str = obj.as_command(cmd, positionals, named)
+    * cmd_str = obj.make_command(cmd, positionals, named)
 
     
     """
