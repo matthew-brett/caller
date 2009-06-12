@@ -1,7 +1,7 @@
 ''' Test for wrapping interface '''
 
 from caller import Positional, Option, Flag, CallerError
-from caller.wrappers import PositionalsContainer, ParameterDefinitions
+from caller.defines import PositionalContainer, ParameterDefinitions
 
 from nose.tools import assert_raises, assert_equal, assert_true
 
@@ -13,7 +13,7 @@ f1 = Flag('option3', ['o3','-3'])
 
 
 def test_pos_container():
-    pc = PositionalsContainer((p1, p2))
+    pc = PositionalContainer((p1, p2))
     yield assert_equal, pc.positional_defines, (p1, p2)
     yield assert_equal, pc.globbing, False
     # the defines are read only
@@ -37,7 +37,7 @@ def test_pos_container():
     yield assert_equal, pc.index('prm1'), 0
     yield assert_equal, pc.index('param2'), 1
     yield assert_equal, pc.index('p2'), 1
-    yield assert_equal, pc.index('implausible'), None
+    yield assert_raises, ValueError, pc.index, 'implausible'
     
 
 def test_param_defs_init():
