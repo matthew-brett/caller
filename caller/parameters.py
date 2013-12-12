@@ -1,5 +1,8 @@
 class Parameter(object):
     """ Class implementing positional and named parameters
+
+    Examples
+    --------
     >>> param = Parameter('p',['param'],float,True)
     >>> param.to_string(1)
     '1.0'
@@ -8,7 +11,7 @@ class Parameter(object):
     'param=1.0'
     """
     default_formatter = '%(value)s'
-    
+
     def __init__(self,
                  name,
                  aliases=None,
@@ -42,6 +45,8 @@ class Parameter(object):
     def keys(self):
         ''' Return name and any aliases for this parameter
 
+        Examples
+        --------
         >>> param = Parameter('param')
         >>> param.keys()
         ['param']
@@ -50,7 +55,7 @@ class Parameter(object):
         ['param', 'p', 'p1']
         '''
         return [self.name] + list(self.aliases)
-    
+
 
 class Positional(Parameter):
     pass
@@ -61,7 +66,9 @@ class Option(Parameter):
 
     Options differ from parameters in that they have a different default
     formatter
-    
+
+    Examples
+    --------
     >>> opt = Option('o',['opt'],float,True)
     >>> opt.to_string(1)
     '--o=1.0'
@@ -83,6 +90,8 @@ class Flag(Option):
     Flags are Options that return the empty string from
     ``to_string(value)`` when ``not value`` is True.
 
+    Examples
+    --------
     >>> opt = Flag('opt')
     >>> opt.to_string(1)
     '--opt'
@@ -95,6 +104,3 @@ class Flag(Option):
         if not value:
             return ''
         return super(Flag, self).to_string(value)
-
-    
-    
