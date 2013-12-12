@@ -9,6 +9,5 @@ setup(name='caller',
       author='Matthew Brett',
       author_email='matthew.brett@gmail.com',
       url='None',
-      packages=['caller', 'biocaller'],
+      packages=['caller', 'caller.tests', 'biocaller'],
       )
-

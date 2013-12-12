@@ -3,10 +3,10 @@
 import os
 from os.path import join as pjoin
 
-from caller import Positional, Option, ShellWrapper, ParameterDefinitions, \
-    CallerError
+from ..parameters import Positional, Option
+from ..defines import ParameterDefinitions, CallerError
+from ..wrappers import ShellWrapper
 
-import nose
 from nose.tools import assert_raises, assert_equal, assert_true
 
 
