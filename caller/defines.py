@@ -1,6 +1,5 @@
-import sys
-from StringIO import StringIO
-import subprocess
+""" Classes for positional and named parameters
+"""
 
 class CallerError(RuntimeError):
     pass
@@ -20,8 +19,8 @@ class PositionalContainer(object):
     Examples
     --------
     >>> from caller import Positional
-    >>> p1 = Positional('param1',['p1']) 
-    >>> p2 = Positional('param2',['p2']) 
+    >>> p1 = Positional('param1',['p1'])
+    >>> p2 = Positional('param2',['p2'])
     >>> pc = PositionalContainer((p1, p2))
     >>> pc.keys()
     ['param1', 'p1', 'param2', 'p2']
@@ -45,10 +44,9 @@ class PositionalContainer(object):
         keys = self.keys()
         if len(set(keys)) < len(keys):
             raise ValueError('Duplicate names or aliases in parameters')
-        
+
     @property
     def positional_defines(self):
-        
         # read only to guarantee names check
         return self._positional_defines
 
@@ -88,7 +86,7 @@ class PositionalContainer(object):
 
         Examples
         --------
-        >>> 
+        >>>
         '''
         for i, pdef in enumerate(self._positional_defines):
             if key in pdef.keys():
@@ -130,7 +128,7 @@ class ParameterDefinitions(object):
            parameters.
         positional_globbing : bool
            If True, positional arguments can extend to infinite number
-           
+
         Examples
         --------
         >>> from caller import Positional, Option
@@ -163,7 +161,7 @@ class ParameterDefinitions(object):
     @property
     def option_defines(self):
         return self._option_defines
-        
+
     def checked_values(self, positionals=(), named=None):
         ''' Check each value using checkers
 
@@ -204,7 +202,6 @@ class ParameterDefinitions(object):
             named = {}
         # first process named, pulling out any positional
         posdefs = self._pos_container
-        pkeys = posdefs.keys()
         options = {}
         named_poses = []
         # check named, and remove positionals
@@ -288,70 +285,6 @@ class ParameterDefinitions(object):
             ndef = self._named_dict[key]
             named_strs.append(ndef.to_string(value))
         return self._compile(cmd, pos_strs, named_strs)
-    
+
     def _compile(self, cmd, pos_strs, named_strs):
         return ' '.join([cmd]+named_strs+pos_strs)
-
-
-class AppWrapper(object):
-    cmd = None
-    parameter_definitions = None
-    result_maker = None
-    
-    def __init__(self, positionals=(), named=None):
-        self._positionals = ()
-        self._options = {}
-        self.set_parameters(positionals, named)
-
-    @property
-    def positionals(self):
-        return self._positionals
-
-    @property
-    def options(self):
-        return self._options
-
-    def set_parameters(self, positionals=(), named=None):
-        if named is None:
-            named = {}
-        pchecker = self.parameter_definitions
-        self._positionals, named = pchecker.checked_values(
-            positionals,
-            named)
-        self._options.update(named)
-                  
-    def run(self):
-        cmdstr = self.parameter_definitions.make_cmdline(
-            self.cmd,
-            self._positionals,
-            self._options,
-            checked=True)
-        return self.result_maker(*self._execute(cmdstr))
-    
-    def _execute(self, cmdstr):
-        raise NotImplementedError
-
-
-class ShellResult(object):
-    def __init__(self, 
-                 result_code,
-                 stdout,
-                 stdin):
-        self.result_code = result_code
-        self.stdout = stdout
-        self.stdin = stdin
-        self.fields = {}
-        
-        
-class ShellWrapper(AppWrapper):
-    result_maker = ShellResult
-    
-    def _execute(self, cmdstr):
-        child = subprocess.Popen(cmdstr,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 shell=(sys.platform!="win32"))
-        (out, err) = child.communicate()
-        error_code = child.returncode
-        return error_code, StringIO(out), StringIO(err)
-    
