@@ -1,5 +1,5 @@
 import sys
-from StringIO import StringIO
+from io import BytesIO
 import subprocess
 
 
@@ -7,7 +7,7 @@ class AppWrapper(object):
     cmd = None
     parameter_definitions = None
     result_maker = None
-    
+
     def __init__(self, positionals=(), named=None):
         self._positionals = ()
         self._options = {}
@@ -29,7 +29,7 @@ class AppWrapper(object):
             positionals,
             named)
         self._options.update(named)
-                  
+
     def run(self):
         cmdstr = self.parameter_definitions.make_cmdline(
             self.cmd,
@@ -37,13 +37,13 @@ class AppWrapper(object):
             self._options,
             checked=True)
         return self.result_maker(*self._execute(cmdstr))
-    
+
     def _execute(self, cmdstr):
         raise NotImplementedError
 
 
 class ShellResult(object):
-    def __init__(self, 
+    def __init__(self,
                  result_code,
                  stdout,
                  stdin):
@@ -51,11 +51,11 @@ class ShellResult(object):
         self.stdout = stdout
         self.stdin = stdin
         self.fields = {}
-        
-        
+
+
 class ShellWrapper(AppWrapper):
     result_maker = ShellResult
-    
+
     def _execute(self, cmdstr):
         child = subprocess.Popen(cmdstr,
                                  stdout=subprocess.PIPE,
@@ -63,5 +63,4 @@ class ShellWrapper(AppWrapper):
                                  shell=(sys.platform!="win32"))
         (out, err) = child.communicate()
         error_code = child.returncode
-        return error_code, StringIO(out), StringIO(err)
-    
+        return error_code, BytesIO(out), BytesIO(err)
