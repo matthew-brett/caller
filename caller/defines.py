@@ -34,7 +34,7 @@ class PositionalContainer(object):
         ----------
         positional_defines : parameter define objects
            Parameter instance objects.  They must have method ``keys()``
-        globbing : bool, optional
+        globbing : {False, True}, optional
            If True, the last parameter in the list is repeated as
            required to soak up unspecified numbers of parameters
         '''
@@ -123,10 +123,10 @@ class ParameterDefinitions(object):
         positional_defines : sequence
            sequence of objects matching Positional API, and defining
            positional parameters
-        option_defines : sequence
+        option_defines : sequence, optional
            sequence of objects matching Option API, defining option
            parameters.
-        positional_globbing : bool
+        positional_globbing : {False, True}, optional
            If True, positional arguments can extend to infinite number
 
         Examples
@@ -170,9 +170,9 @@ class ParameterDefinitions(object):
 
         Parameters
         ----------
-        positionals : sequence
+        positionals : sequence, optional
            values for positional parameters
-        named : mapping or None
+        named : None or mapping, optional
            keys, values for options (which must be named) and of any
            named positional parameters. If None (the default) then
            assume empty mapping
@@ -249,12 +249,12 @@ class ParameterDefinitions(object):
         ----------
         cmd : string
            command
-        positionals : sequence
+        positionals : sequence, optional
            sequence of positional argument values
-        named : mapping
+        named : None or mapping, optional
            key, value pairs of named arguememts, either options, or
-           named positional
-        checked: bool
+           named positional. If None, empty mapping.
+        checked: {False, True}, optional
            True if `positionals` and `named` have already been checked
            and sorted into positional and option args.
 
