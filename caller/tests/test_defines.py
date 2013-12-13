@@ -15,16 +15,16 @@ f1 = Flag('option3', ['o3','-3'])
 def test_pos_container():
     pc = PositionalContainer((p1, p2))
     yield assert_equal, pc.positional_defines, (p1, p2)
-    yield assert_equal, pc.globbing, False
+    yield assert_equal, pc.last_repeat, False
     # the defines are read only
     yield assert_raises, AttributeError, pc.__setattr__, 'positional_defines', None
-    # the globbing, not
-    pc.globbing = False
-    # with globbing False, the generator just returns the input defines
+    # the last_repeat, not
+    pc.last_repeat = False
+    # with last_repeat False, the generator just returns the input defines
     generated = tuple(pc.gen_defines())
     yield assert_equal, generated, (p1, p2)
-    # with globbing True, it carries on for ever
-    pc.globbing = True
+    # with last_repeat True, it carries on for ever
+    pc.last_repeat = True
     def_list = []
     gen = pc.gen_defines()
     for i in range(4):
@@ -38,7 +38,7 @@ def test_pos_container():
     yield assert_equal, pc.index('param2'), 1
     yield assert_equal, pc.index('p2'), 1
     yield assert_raises, ValueError, pc.index, 'implausible'
-    
+
 
 def test_param_defs_init():
     # options can be nothing
@@ -96,8 +96,8 @@ def test_param_defs_chkvals():
     yield assert_equal, ovals, {}
     # too many positionals will cause trouble
     yield assert_raises, CallerError, pd.checked_values, ('1','2','3')
-    # but not if we turn on globbing
-    pd = ParameterDefinitions((p1, p2), (o1, o2), positional_globbing=True)
+    # but not if we turn on last_repeat
+    pd = ParameterDefinitions((p1, p2), (o1, o2), pos_last_repeat=True)
     pvals, ovals = pd.checked_values(('1','2','3'))
     yield assert_equal, pvals, ('1', '2', '3')
     yield assert_equal, ovals, {}

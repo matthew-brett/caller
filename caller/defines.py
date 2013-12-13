@@ -11,10 +11,10 @@ class PositionalContainer(object):
     The ``ParameterDefinitions`` class uses this class internally to do
     housekeeping on the collection of positional defines.
 
-    The class houses as elements, positional parameter objects.  The
-    only interface the objects need to obey is that they have method
-    ``keys()``, and that there should be no overlap between the results
-    of ``keys()`` across the elements.
+    The class houses a sequence of positional parameter objects.  The only
+    interface the objects need to obey is that they have method ``keys()``, and
+    that there should be no overlap between the results of ``keys()`` across the
+    elements.
 
     Examples
     --------
@@ -27,19 +27,19 @@ class PositionalContainer(object):
     >>> pc.index('p2')
     1
     """
-    def __init__(self, positional_defines, globbing=False):
+    def __init__(self, positional_defines, last_repeat=False):
         ''' Setup positional container
 
         Parameters
         ----------
         positional_defines : parameter define objects
            Parameter instance objects.  They must have method ``keys()``
-        globbing : {False, True}, optional
-           If True, the last parameter in the list is repeated as
-           required to soak up unspecified numbers of parameters
+        last_repeat : {False, True}, optional
+           If True, the last parameter in the list is repeated as required to
+           soak up unspecified numbers of parameters
         '''
         self._positional_defines = positional_defines
-        self.globbing = globbing
+        self.last_repeat = last_repeat
         # check for duplicate names
         keys = self.keys()
         if len(set(keys)) < len(keys):
@@ -52,10 +52,13 @@ class PositionalContainer(object):
 
     def gen_defines(self):
         ''' generate all positional defines
+
+        If ``self.last_repeat`` is True, return the last positional define forever
+        to soak up extra positional arguments
         '''
         for pdef in self._positional_defines:
             yield pdef
-        if self.globbing:
+        if self.last_repeat:
             while True:
                 yield pdef
 
@@ -115,7 +118,7 @@ class ParameterDefinitions(object):
     def __init__(self,
                  positional_defines,
                  option_defines = (),
-                 positional_globbing=False):
+                 pos_last_repeat=False):
         """ Initialize definitions
 
         Parameters
@@ -126,8 +129,9 @@ class ParameterDefinitions(object):
         option_defines : sequence, optional
            sequence of objects matching Option API, defining option
            parameters.
-        positional_globbing : {False, True}, optional
-           If True, positional arguments can extend to infinite number
+        pos_last_repeat : {False, True}, optional
+           If True, assume extra positional arguments are of same type as last
+           listed.
 
         Examples
         --------
@@ -138,9 +142,9 @@ class ParameterDefinitions(object):
         """
         self._positional_defines = positional_defines
         self._pos_container = PositionalContainer(positional_defines,
-                                                   positional_globbing)
+                                                  pos_last_repeat)
         self._option_defines = option_defines
-        self._positional_globbing = positional_globbing
+        self._last_pos_repeat = pos_last_repeat
         # check for duplicate names in named defines
         named_dict = {}
         for pdef in self._positional_defines:
