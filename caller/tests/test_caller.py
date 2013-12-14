@@ -31,11 +31,11 @@ class App1Wrapper(ShellWrapper):
 
 def test_app1():
     app1_wrapped = App1Wrapper()
-    yield assert_raises, CallerError, app1_wrapped.run
+    assert_raises(CallerError, app1_wrapped.run)
     app1_wrapped.set_parameters(('arg1','arg2'))
-    yield assert_equal, app1_wrapped.positionals, ('arg1', 'arg2')
+    assert_equal(app1_wrapped.positionals, ('arg1', 'arg2'))
     res = app1_wrapped.run()
-    yield assert_equal, res.stdout.getvalue(), 'arg1 arg2 None\n'
+    assert_equal(res.stdout.getvalue(), 'arg1 arg2 None\n')
     app1_wrapped.set_parameters(('arg1','arg2'),{'option1':'opt1'})
     res = app1_wrapped.run()
-    yield assert_equal, res.stdout.getvalue(), 'arg1 arg2 opt1\n'
+    assert_equal(res.stdout.getvalue(), 'arg1 arg2 opt1\n')
