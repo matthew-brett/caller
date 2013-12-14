@@ -36,6 +36,17 @@ def test_app1():
     assert_equal(app1_wrapped.positionals, ('arg1', 'arg2'))
     res = app1_wrapped.run()
     assert_equal(res.stdout.getvalue(), 'arg1 arg2 None\n')
-    app1_wrapped.set_parameters(('arg1','arg2'),{'option1':'opt1'})
+    app1_wrapped.set_parameters(('arg1', 'arg2'),{'option1': 'opt1'})
     res = app1_wrapped.run()
     assert_equal(res.stdout.getvalue(), 'arg1 arg2 opt1\n')
+    app1_wrapped.set_parameters(('arg1', 'arg2'),{'-1': 'opt1'})
+    res = app1_wrapped.run()
+    assert_equal(res.stdout.getvalue(), 'arg1 arg2 opt1\n')
+    # To few positional arguments
+    app1_wrapped.set_parameters(('arg1',))
+    assert_raises(CallerError, app1_wrapped.run)
+    # Wrong name for named argument
+    assert_raises(CallerError,
+                  app1_wrapped.set_parameters,
+                  ('arg1', 'arg2'),
+                  {'-2': 'opt1'})
