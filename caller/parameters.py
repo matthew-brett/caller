@@ -1,3 +1,7 @@
+import sys
+
+string_types = (str,) if sys.version_info[0] > 2 else (basestring,)
+
 class Parameter(object):
     """ Class implementing positional and named parameters
 
@@ -28,7 +32,7 @@ class Parameter(object):
         self.is_required = is_required
         if stringer is None:
             stringer = self.default_stringer
-        elif isinstance(stringer, basestring):
+        elif isinstance(stringer, string_types):
             # assume stringer is a format string
             fmtstr = stringer
             def stringer(value): return fmtstr % value

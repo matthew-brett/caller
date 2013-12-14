@@ -228,7 +228,7 @@ class ParameterDefinitions(object):
             # make name canonical for option
             options[ndef.name] = ndef.checker(value)
         # put any named positionals into positionals list
-        named_poses.sort(lambda x,y: cmp(x[0],y[0]))
+        named_poses.sort(key = lambda x: x[0])
         positionals = list(positionals)
         for i, val in named_poses:
             if i < len(positionals):
@@ -244,7 +244,7 @@ class ParameterDefinitions(object):
         poses = []
         for value in positionals:
             try:
-                pdef = pdef_iter.next()
+                pdef = next(pdef_iter)
             except StopIteration:
                 raise CallerError('Too many positional parameters')
             poses.append(pdef.checker(value))

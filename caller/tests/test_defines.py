@@ -28,7 +28,7 @@ def test_pos_container():
     def_list = []
     gen = pc.gen_defines()
     for i in range(4):
-        def_list.append(gen.next())
+        def_list.append(next(gen))
     assert_equal(def_list, [p1, p2, p2, p2])
     # keys are all names and aliases
     assert_equal(pc.keys(), p1.keys() + p2.keys())
