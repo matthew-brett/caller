@@ -1,6 +1,10 @@
 """ Classes for positional and named parameters
 """
 
+import sys
+
+string_types = (str,) if sys.version_info[0] > 2 else (basestring,)
+
 class CallerError(RuntimeError):
     pass
 
@@ -247,12 +251,12 @@ class ParameterDefinitions(object):
         return tuple(poses), options
 
     def make_cmdline(self, cmd, positionals=(), named=None, checked=False):
-        ''' Make command line string from input `cmd` and parameters
+        ''' Make command line sequence from input `cmd` and parameters
 
         Parameters
         ----------
-        cmd : string
-           command
+        cmd : sequence
+           command sequence
         positionals : sequence, optional
            sequence of positional argument values
         named : None or mapping, optional
@@ -264,9 +268,13 @@ class ParameterDefinitions(object):
 
         Returns
         -------
-        cmdline : string
-           command line string
+        cmdline : tuple
+           command line tuple
         '''
+        if isinstance(cmd, string_types):
+            cmd = [cmd]
+        else:
+            cmd = list(cmd)
         if named is None:
             named = {}
         if not checked:
@@ -282,7 +290,7 @@ class ParameterDefinitions(object):
         pdef_iter = self._pos_container.gen_defines()
         pos_strs = []
         for value in positionals:
-            pdef = pdef_iter.next()
+            pdef = next(pdef_iter)
             pos_strs.append(pdef.to_string(value))
         named_strs =  []
         for key, value in named.items():
@@ -291,4 +299,4 @@ class ParameterDefinitions(object):
         return self._compile(cmd, pos_strs, named_strs)
 
     def _compile(self, cmd, pos_strs, named_strs):
-        return ' '.join([cmd]+named_strs+pos_strs)
+        return tuple(cmd + named_strs + pos_strs)

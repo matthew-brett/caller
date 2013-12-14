@@ -105,20 +105,20 @@ def test_param_defs_chkvals():
 def test_param_defs_cmdline():
     pd = ParameterDefinitions((p1, p2))
     # there's a required parameter, and here we don't pass it
-    assert_raises(CallerError, pd.make_cmdline, 'cmd')
+    assert_raises(CallerError, pd.make_cmdline, ('cmd',))
     # now we do
-    assert_equal(pd.make_cmdline('cmd', ('a1',)), 'cmd a1')
-    assert_equal(pd.make_cmdline('cmd', ('a1','a2')), 'cmd a1 a2')
+    assert_equal(pd.make_cmdline(('cmd',), ('a1',)), ('cmd', 'a1'))
+    assert_equal(pd.make_cmdline(('cmd',), ('a1','a2')), ('cmd', 'a1', 'a2'))
     # with some options
     pd = ParameterDefinitions((p1, p2),(o1, o2, f1))
-    assert_equal(pd.make_cmdline('cmd', ('a1',)), 'cmd a1')
-    assert_equal(pd.make_cmdline('cmd', ('a1','a2')), 'cmd a1 a2')
+    assert_equal(pd.make_cmdline(('cmd',), ('a1',)), ('cmd', 'a1'))
+    assert_equal(pd.make_cmdline(('cmd',), ('a1','a2')), ('cmd', 'a1', 'a2'))
     assert_equal(
-        pd.make_cmdline('cmd', ('arg1',), {'o1':'3'}),
-        'cmd --option1=3 arg1')
+        pd.make_cmdline(('cmd',), ('arg1',), {'o1':'3'}),
+        ('cmd', '--option1=3', 'arg1'))
     assert_equal(
-        pd.make_cmdline('cmd', ('arg1',), {'o2': True}),
-        'cmd --option2=True arg1')
+        pd.make_cmdline(('cmd',), ('arg1',), {'o2': True}),
+        ('cmd', '--option2=True', 'arg1'))
     assert_equal(
-        pd.make_cmdline('cmd', ('arg1',), {'o3': True}),
-        'cmd --option3 arg1')
+        pd.make_cmdline(('cmd',), ('arg1',), {'o3': True}),
+        ('cmd', '--option3', 'arg1'))

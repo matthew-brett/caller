@@ -107,7 +107,7 @@ class ShellResult(object):
 class ShellWrapper(AppWrapper):
     """ Wrap system command line application """
     result_maker = ShellResult
-    shell=True
+    shell=False
 
     def _execute(self, cmd):
         child = subprocess.Popen(cmd,
